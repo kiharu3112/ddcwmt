@@ -1,29 +1,35 @@
-import { AppShell, Burger, Group } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { AppShell, Burger, Button, Flex, Group } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 // biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
-import Map from "ol/Map.js";
-import View from "ol/View.js";
-import { getTopLeft, getWidth } from "ol/extent.js";
-import { get as getProjection } from "ol/proj.js";
-import { WMTS } from "ol/source";
-import OSM from "ol/source/OSM.js";
-import Stroke from "ol/style/Stroke";
-import WMTSTileGrid from "ol/tilegrid/WMTS";
-import { memo, useEffect, useRef, useState } from "react";
-import { Panel } from "./components/Panel";
-import type { OLLayerInterface } from "./interface/layerInterface";
-import { OLGraticule } from "./layer/OLGraticule";
-import { OLTile } from "./layer/OLTile";
+import Map from 'ol/Map.js';
+import View from 'ol/View.js';
+import { getTopLeft, getWidth } from 'ol/extent.js';
+import { get as getProjection } from 'ol/proj.js';
+import { WMTS } from 'ol/source';
+import OSM from 'ol/source/OSM.js';
+import Stroke from 'ol/style/Stroke';
+import WMTSTileGrid from 'ol/tilegrid/WMTS';
+import { memo, useEffect, useRef, useState } from 'react';
+import { Panel } from './components/Panel';
+import type { OLLayerInterface } from './interface/layerInterface';
+import { OLGraticule } from './layer/OLGraticule';
+import { OLTile } from './layer/OLTile';
+import {
+  IconBrandGithub,
+  IconBrandGithubCopilot,
+  IconBrandGithubFilled,
+} from '@tabler/icons-react';
+import { none } from 'ol/centerconstraint';
 
 export const App = memo(() => {
   const [opened, { open, close }] = useDisclosure();
   const [layers, setLayers] = useState<OLLayerInterface[]>([]);
   const [viewState, setViewState] = useState<View>(
-    new View({ center: [0, 0], zoom: 2 }),
+    new View({ center: [0, 0], zoom: 2 })
   );
   const mapRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const projection = getProjection("EPSG:3857");
+    const projection = getProjection('EPSG:3857');
     if (!projection) return;
     const projectionExtent = projection.getExtent();
     const size = getWidth(projectionExtent) / 256;
@@ -38,39 +44,39 @@ export const App = memo(() => {
       layerID: 1,
       opacity: 1,
       source: new OSM(),
-      name: "OSM",
+      name: 'OSM',
     });
     const wmts = new OLTile({
-      name: "WMTS",
+      name: 'WMTS',
       layerID: 3,
       opacity: 1,
       source: new WMTS({
         attributions:
           'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
-        url: "https://mrdata.usgs.gov/mapcache/wmts",
-        layer: "sgmc2",
-        matrixSet: "GoogleMapsCompatible",
-        format: "image/png",
+        url: 'https://mrdata.usgs.gov/mapcache/wmts',
+        layer: 'sgmc2',
+        matrixSet: 'GoogleMapsCompatible',
+        format: 'image/png',
         projection: projection,
         tileGrid: new WMTSTileGrid({
           origin: getTopLeft(projectionExtent),
           resolutions: resolutions,
           matrixIds: matrixIds,
         }),
-        style: "default",
+        style: 'default',
         wrapX: true,
       }),
     });
     const graticule = new OLGraticule({
       layerID: 2,
       strokeStyle: new Stroke({
-        color: "rgba(255,120,0,0.9)",
+        color: 'rgba(255,120,0,0.9)',
         width: 2,
         lineDash: [0.5, 4],
       }),
       showLabels: true,
       wrapX: true,
-      name: "Graticule",
+      name: 'Graticule',
     });
     setLayers([osmLayer, wmts, graticule]);
   }, []);
@@ -84,36 +90,46 @@ export const App = memo(() => {
     const handleViewChange = () => {
       setViewState(viewState);
     };
-    viewState.on("change", handleViewChange);
+    viewState.on('change', handleViewChange);
 
     return () => {
       map.setTarget(undefined);
-      viewState.un("change", handleViewChange);
+      viewState.un('change', handleViewChange);
     };
   }, [layers, viewState]);
   return (
     <>
       <AppShell
         header={{ height: 60 }}
-        padding="md"
-        style={{ width: "100vw", height: "100vh" }}
+        padding='md'
+        style={{ width: '100vw', height: '100vh' }}
       >
-        <AppShell.Header>
-          <Group h="100%" px="md">
-            <Burger
-              opened={opened}
-              onClick={!opened ? open : close}
-              hiddenFrom="sm"
-              size="sm"
-            />
-            <Burger
-              opened={opened}
-              onClick={!opened ? open : close}
-              visibleFrom="sm"
-              size="sm"
-            />{" "}
-            DDCWMT
-          </Group>
+        <AppShell.Header style={{ alignContent: 'center' }}>
+          <Flex align={'center'} justify={'space-between'}>
+            <Group h='100%' px='md'>
+              <Burger
+                opened={opened}
+                onClick={!opened ? open : close}
+                hiddenFrom='sm'
+                size='sm'
+              />
+              <Burger
+                opened={opened}
+                onClick={!opened ? open : close}
+                visibleFrom='sm'
+                size='sm'
+              />{' '}
+              DDCWMT
+            </Group>
+            <a
+              href='https://github.com/kiharu3112/ddcwmt'
+              target='_blank'
+              rel='noopener noreferrer'
+              style={{ color: '#000' }}
+            >
+              <IconBrandGithub size={40} style={{ marginRight: '10px' }} />
+            </a>
+          </Flex>
         </AppShell.Header>
         <Panel
           layers={layers}
@@ -121,8 +137,8 @@ export const App = memo(() => {
           close={close}
           setLayers={setLayers}
         />
-        <AppShell.Main style={{ width: "auto", height: "100%" }} p={0}>
-          <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
+        <AppShell.Main style={{ width: 'auto', height: '100%' }} p={0}>
+          <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
         </AppShell.Main>
       </AppShell>
     </>
