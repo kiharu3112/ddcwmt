@@ -3,24 +3,24 @@ import { useDisclosure } from "@mantine/hooks";
 // biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
 import Map from "ol/Map.js";
 import View from "ol/View.js";
-import ol from "ol/dist/ol";
+import { getTopLeft, getWidth } from "ol/extent.js";
+import { get as getProjection } from "ol/proj.js";
 import { WMTS } from "ol/source";
 import OSM from "ol/source/OSM.js";
 import Stroke from "ol/style/Stroke";
+import WMTSTileGrid from "ol/tilegrid/WMTS";
 import { memo, useEffect, useRef, useState } from "react";
 import { Panel } from "./components/Panel";
 import type { OLLayerInterface } from "./interface/layerInterface";
 import { OLGraticule } from "./layer/OLGraticule";
 import { OLTile } from "./layer/OLTile";
-import projections = ol.proj.projections;
-import WMTSTileGrid from "ol/tilegrid/WMTS";
-import resolution = ol.resolution;
-import { getTopLeft, getWidth } from "ol/extent.js";
-import { get as getProjection } from "ol/proj.js";
 
 export const App = memo(() => {
   const [opened, { open, close }] = useDisclosure();
   const [layers, setLayers] = useState<OLLayerInterface[]>([]);
+  const [viewState, setViewState] = useState<View>(
+    new View({ center: [0, 0], zoom: 2 }),
+  );
   const mapRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const projection = getProjection("EPSG:3857");
@@ -74,20 +74,23 @@ export const App = memo(() => {
     });
     setLayers([osmLayer, wmts, graticule]);
   }, []);
-
   useEffect(() => {
     if (!mapRef.current || layers.length === 0) return; // mapRef.currentがnullまたはlayersが空の場合は何もしない
     const map = new Map({
       target: mapRef.current,
       layers: layers,
-      view: new View({
-        center: [0, 0],
-        zoom: 0,
-      }),
+      view: viewState,
     });
-    return () => map.setTarget(undefined);
-  }, [layers]);
+    const handleViewChange = () => {
+      setViewState(viewState);
+    };
+    viewState.on("change", handleViewChange);
 
+    return () => {
+      map.setTarget(undefined);
+      viewState.un("change", handleViewChange);
+    };
+  }, [layers, viewState]);
   return (
     <>
       <AppShell
@@ -112,7 +115,12 @@ export const App = memo(() => {
             DDCWMT
           </Group>
         </AppShell.Header>
-        <Panel layers={layers} opened={opened} close={close} />
+        <Panel
+          layers={layers}
+          opened={opened}
+          close={close}
+          setLayers={setLayers}
+        />
         <AppShell.Main style={{ width: "auto", height: "100%" }} p={0}>
           <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
         </AppShell.Main>
