@@ -1,18 +1,19 @@
-import { Card, Drawer, Skeleton } from "@mantine/core";
-import type BaseLayer from "ol/layer/Base";
+import { Card, Drawer, Text } from "@mantine/core";
 import { memo } from "react";
+import type { OLLayerInterface } from "../interface/layerInterface";
 
 type Props = {
-  layers: BaseLayer[];
+  layers: OLLayerInterface[];
   opened: boolean;
   close: () => void;
 };
 export const Panel = memo((props: Props) => {
   return (
     <Drawer p={"md"} opened={props.opened} onClose={props.close}>
-      {props.layers.map((layer, index) => (
-        <Card key={index} shadow="xs" padding="xs" m="lg">
-          <Skeleton key={index} height={100} />
+      {props.layers.map((layer) => (
+        <Card key={layer.getID()} shadow="xs" padding="xs" m="lg">
+          <Text>{layer.getID()}</Text>
+          <Text>{layer.getName()}</Text>
         </Card>
       ))}
     </Drawer>
