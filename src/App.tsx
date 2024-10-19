@@ -1,4 +1,4 @@
-import { AppShell, Burger, Group } from "@mantine/core";
+import { AppShell, Burger, Flex, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 // biome-ignore lint/suspicious/noShadowRestrictedNames: <explanation>
 import Map from "ol/Map.js";
@@ -14,13 +14,14 @@ import { Panel } from "./components/Panel";
 import type { OLLayerInterface } from "./interface/layerInterface";
 import { OLGraticule } from "./layer/OLGraticule";
 import { OLTile } from "./layer/OLTile";
-
+import { IconBrandGithub } from "@tabler/icons-react";
 export const App = memo(() => {
   const [opened, { open, close }] = useDisclosure();
   const [layers, setLayers] = useState<OLLayerInterface[]>([]);
   const [viewState, setViewState] = useState<View>(
-    new View({ center: [0, 0], zoom: 2 }),
+    new View({ center: [0, 0], zoom: 0, projection: "EPSG:3857" })
   );
+  const [drawingMethod, setDrawingMethod] = useState<"2D" | "3D">("2D");
   const mapRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const projection = getProjection("EPSG:3857");
@@ -37,7 +38,7 @@ export const App = memo(() => {
     const osmLayer = new OLTile({
       layerID: 1,
       opacity: 1,
-      source: new OSM(),
+      source: new OSM({ wrapX: false }),
       name: "OSM",
     });
     const wmts = new OLTile({
@@ -58,7 +59,7 @@ export const App = memo(() => {
           matrixIds: matrixIds,
         }),
         style: "default",
-        wrapX: true,
+        wrapX: false,
       }),
     });
     const graticule = new OLGraticule({
@@ -69,7 +70,7 @@ export const App = memo(() => {
         lineDash: [0.5, 4],
       }),
       showLabels: true,
-      wrapX: true,
+      wrapX: false,
       name: "Graticule",
     });
     setLayers([osmLayer, wmts, graticule]);
@@ -81,6 +82,11 @@ export const App = memo(() => {
       layers: layers,
       view: viewState,
     });
+    if (drawingMethod === "3D") {
+      // @ts-ignore
+      const ol3d = new OLCesium({ map: map });
+      ol3d.setEnabled(true);
+    }
     const handleViewChange = () => {
       setViewState(viewState);
     };
@@ -90,36 +96,48 @@ export const App = memo(() => {
       map.setTarget(undefined);
       viewState.un("change", handleViewChange);
     };
-  }, [layers, viewState]);
+  }, [layers, viewState, drawingMethod]);
   return (
     <>
       <AppShell
-        header={{ height: 60 }}
+        header={{ height: 50 }}
         padding="md"
         style={{ width: "100vw", height: "100vh" }}
       >
-        <AppShell.Header>
-          <Group h="100%" px="md">
-            <Burger
-              opened={opened}
-              onClick={!opened ? open : close}
-              hiddenFrom="sm"
-              size="sm"
-            />
-            <Burger
-              opened={opened}
-              onClick={!opened ? open : close}
-              visibleFrom="sm"
-              size="sm"
-            />{" "}
-            DDCWMT
-          </Group>
+        <AppShell.Header style={{ alignContent: "center" }}>
+          <Flex align={"center"} justify={"space-between"}>
+            <Group h="100%" px="md">
+              <Burger
+                opened={opened}
+                onClick={!opened ? open : close}
+                hiddenFrom="sm"
+                size="sm"
+              />
+              <Burger
+                opened={opened}
+                onClick={!opened ? open : close}
+                visibleFrom="sm"
+                size="sm"
+              />{" "}
+              DDCWMT
+            </Group>
+            <a
+              href="https://github.com/kiharu3112/ddcwmt"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#000" }}
+            >
+              <IconBrandGithub size={35} style={{ marginRight: "10px" }} />
+            </a>
+          </Flex>
         </AppShell.Header>
         <Panel
           layers={layers}
           opened={opened}
           close={close}
           setLayers={setLayers}
+          drawingMethod={drawingMethod}
+          setDrawingMethod={setDrawingMethod}
         />
         <AppShell.Main style={{ width: "auto", height: "100%" }} p={0}>
           <div ref={mapRef} style={{ width: "100%", height: "100%" }} />

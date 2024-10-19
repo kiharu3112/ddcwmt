@@ -6,8 +6,14 @@ import {
   Slider,
   Switch,
   Text,
+  NativeSelect,
+  Divider,
 } from "@mantine/core";
-import { IconArrowNarrowDown, IconArrowNarrowUp } from "@tabler/icons-react";
+import {
+  IconArrowNarrowDown,
+  IconArrowNarrowUp,
+  IconWriting,
+} from "@tabler/icons-react";
 import { memo } from "react";
 import type { OLLayerInterface } from "../interface/layerInterface";
 
@@ -16,6 +22,8 @@ type Props = {
   opened: boolean;
   close: () => void;
   setLayers: (layers: OLLayerInterface[]) => void;
+  drawingMethod: "2D" | "3D";
+  setDrawingMethod: (method: "2D" | "3D") => void;
 };
 export const Panel = memo((props: Props) => {
   const upIcon = <IconArrowNarrowUp size={24} />;
@@ -47,6 +55,7 @@ export const Panel = memo((props: Props) => {
   };
   return (
     <Drawer p={"md"} opened={props.opened} onClose={props.close}>
+      <Text pl="lg" pr="xs">レイヤー</Text>
       {props.layers.map((layer, index) => (
         <Card key={layer.getID()} shadow="xs" padding="xs" m="lg">
           <Flex align={"center"} justify={"space-between"}>
@@ -100,6 +109,18 @@ export const Panel = memo((props: Props) => {
           </Flex>
         </Card>
       ))}
+      <Divider m="md" w="23rem" size="xs"/>
+      <NativeSelect
+        leftSection={<IconWriting size={24} />}
+        leftSectionPointerEvents="none"
+        label="描画方法"
+        data={["2D", "3D"]}
+        value={props.drawingMethod}
+        onChange={(e) =>
+          props.setDrawingMethod(e.currentTarget.value as "2D" | "3D")
+        }
+        m={"lg"}
+      />
     </Drawer>
   );
 });
