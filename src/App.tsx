@@ -16,7 +16,7 @@ import { OLGraticule } from "./layer/OLGraticule";
 import { OLTile } from "./layer/OLTile";
 import { IconBrandGithub } from "@tabler/icons-react";
 // @ts-ignore
-import OLCesium from "olcs";
+import OLCesium from "olcs/OLCesium";
 export const App = memo(() => {
   const [opened, { open, close }] = useDisclosure();
   const [layers, setLayers] = useState<OLLayerInterface[]>([]);
